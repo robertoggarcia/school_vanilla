@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Listar usuarios</title>
+</head>
+<body>
+    {% if student_id %}
+        Se creo el estudiante con el ID {{ student_id }}
+    {% else %}
+    Lista de estudiantes
+    {% for student in students %}
+        <p><a href="{% url 'students:detail' student.id %}">{{ student.name }} </a></p>
+    {% endfor %}
+
+    <hr>
+
+    <form method="POST" action="{% url 'students:view' %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="name">Nombre</label>
+            <input type="text" class="form-control" name="name" placeholder="Juan">
+        </div>
+        <div class="form-group">
+            <label for="age">Edad</label>
+            <input type="number" class="form-control" name="age" placeholder="18">
+        </div>
+        <div class="form-group">
+            <label for="grade">Calificación</label>
+            <input type="number" class="form-control" name="grade" placeholder="10">
+        </div>
+        <div class="text-right">
+            <button type="submit" class="btn rounded-pill academlo-primary-button">Crear estudiante</button>
+        </div>
+    </form>
+    {% endif %}
+</body>
+</html>

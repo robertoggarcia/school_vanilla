@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de estudiante</title>
+</head>
+<body>
+{% if student %}
+    <p>{{ student.id }}</p>
+    <p>{{ student.name }}</p>
+    <p>{{ student.age }}</p>
+
+    <form method="POST" action="{% url 'students:detail' student.id %}">
+    {% csrf_token %}
+        <button type="submit">Borrar</button>
+    </form>
+{% endif %}
+</body>
+</html>
