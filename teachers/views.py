@@ -33,7 +33,6 @@ class TeacherDetailView(APIView):
     def put(self, request, pk):
         teacher = Teacher.objects.get(id=pk)
         for field in request.data:
-            print(f'Field {field}, value {request.data[field]}')
             setattr(teacher, field, request.data[field])
         teacher.save()
         return Response(status=200)
