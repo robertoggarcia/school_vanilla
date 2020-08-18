@@ -15,10 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
+
+from core.authentication import MyTokenObtainPairSerializer, MyTokenObtainPairView
+from core.views import login
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('students.urls')),
     path('', include('teachers.urls')),
     path('', include('subjects.urls')),
+    path('accounts/login/', login),
+    path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

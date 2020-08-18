@@ -3,8 +3,12 @@ import json
 
 from django.http.response import HttpResponse
 from django.shortcuts import render, redirect
+from rest_framework.viewsets import ModelViewSet
+
 from students.models import Student
 from django.views import View
+
+from students.serializers import StudentSerializer
 
 
 class StudentView(View):
@@ -69,3 +73,8 @@ def student_detail(request, student_id):
         student = Student.objects.get(id=student_id)
         student.delete()
         return redirect('students:done')
+
+
+class StudentViewSet(ModelViewSet):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
