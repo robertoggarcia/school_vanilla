@@ -3,13 +3,15 @@
 ### Crear ambiente
 
 1. Crear un ambiente virtual
-- python -m venv "nombre del ambiente"
- `python -m venv venv`
+    
+    python -m venv "nombre del ambiente"
+    
+    `python -m venv venv`
  
  2. Activar mi ambiente
-- source "nombre del ambiente"/bin/activate (Linux/OsX)
-- "nombre del ambiente"/Scripts/activate.bat (Windows CMD)
-- "nombre del ambiente"/Scripts/Activate.ps1 (Windows PowerShell)
+    - source "nombre del ambiente"/bin/activate (Linux/OsX)
+    - "nombre del ambiente"/Scripts/activate.bat (Windows CMD)
+    - "nombre del ambiente"/Scripts/Activate.ps1 (Windows PowerShell)
 `source venv/bin/activate`
 
 3. Instalar Django 2.2 *
@@ -19,8 +21,9 @@
 ### Crear proyecto
 
 1. Crear mi proyecto de Django *
-- django-admin startproject "nombre del proyecto"
- `django-admin startproject school`
+    - django-admin startproject "nombre del proyecto"
+    
+    `django-admin startproject school`
 
 2. Configurar ambiente (PyCharm) *
  - Abrir el proyecto (File -> Open -> "ruta")
@@ -30,8 +33,8 @@
 
 ### Configurar base de datos
 1. Instalar psycopg2 (si usaremos postgres)
-`pip install psycopg2`
-
+    
+    `pip install psycopg2`
 
 2. En el archivo de configuración, vamos a asignar el motor que usaremos:
 * postgres
@@ -40,36 +43,39 @@
 * Sqlite3
 
 Configuramos los datos de conexión: NAME (nombre de la base de datos), USER, PASSWORD, HOST, PORT.
-`
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'school',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': '127.0.0.1',
-        'PORT': '5432'
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'school',
+            'USER': 'postgres',
+            'PASSWORD': 'postgres',
+            'HOST': '127.0.0.1',
+            'PORT': '5432'
+        }
     }
-}
-`
 
 Previamente debe estar creada la base de datos con ese nombre.
 
 
 ### Correr mi proyecto
 1. Verificar que no tenemos errores
-`python manage.py check`
+
+    `python manage.py check`
 
 2. Aplicar las migraciones base de Django
-`python manage.py migrate`
+
+    `python manage.py migrate`
 
 3. Correr el servidor
-`python manage.py runserver`
+    
+    `python manage.py runserver`
 
 
 ### Crear aplicación
 1. python manage.py startapp "nombre de la aplicación"
-`python manage.py startapp students`
+    
+    `python manage.py startapp students`
 
 2. Registrar la aplicación en el proyecto
 "carpeta de configuración del proyecto"/settings.py -> INSTALLED_APPS
@@ -81,25 +87,34 @@ Agregamos la ruta a el archivo "apps.py" y la clase que contiene: "StudentsConfi
 1. Crear un clase que herede de models.Model
 
 2. Crear migraciones
-`python manage.py makemigrations`
+    
+    `python manage.py makemigrations`
 
 3. Aplicar esas migraciones
-`python manage.py migrate`
+    
+    `python manage.py migrate`
 
-
+4. Registra el modelo para verlo en Admin de Django (admin.py)
+```    
+    from django.contrib import admin
+    
+    from subjects.models import Subject    
+    
+    admin.site.register(Subject)
+```
 Para ver una migración a nivel SQL, usar el siguiente comando:
 python manage.py sqlmigrate "nombre de la aplicación" "número de migración"
-`python manage.py sqlmigrate students 0001`
+    
+    `python manage.py sqlmigrate students 0001`
 
 
 ### Django admin
 El administrador de Django nos permite gestionar de forma sencilla todo lo relacionado a los modelos. Es necesario contar con un super usuario de django.
+
 `python manage.py createsuperuser`
 
 
-Para visualizar los modelos de una aplicación, es necesario agregar los modelos al archivo admin.py de la aplicación.
-`admin.site.register(Student)`
-
+### BD
 
 ### Realación 1:1
 `user = models.OneToOneField(User, related_name='user', on_delete=models.CASCADE, null=True)`
@@ -121,3 +136,99 @@ Es posible agregar un registro mediante '.add':
 
 O eliminar un registr con '.remove':
 `subject_1.students.remove(student_1)`
+
+## Endpoints
+
+## Crear un serializador
+Un serializador nos permite convertir lo que tenemos en la BD a un json, o a una estructura que pueda mandada como respuesta de una petición. Convierte información de una forma a otra.
+
+1. Crear un archivo serializers.py dentro de mi aplicación
+2. Crear una clase que herede de ModelSerializer
+3. Definir el modelo y los campos que se van a visualizar
+
+Es posible que existan N serializadores, de acuerdo a la necesidad del negocio, es decir, a lo que queremos mostrar.
+
+	class SubjectDetailSerializer(ModelSerializer):
+	    teacher = TeacherSerializer(read_only=True)
+
+	    class Meta:
+	        model = Subject
+	        fields = '__all__'
+
+## Crear un ViewSet
+Una ViewSetm, es un conjunto de vistas genericas para las acciones básicas de un endpoint: GET, POST, DELETE, UPDATE (list, retrive, destroy, update).
+
+Para crear un viewset, es necesario definir una clase que herede de ModelViewSet y definir el queryset y el serializador que vamos a utilizar.
+
+	class SubjectViewSet(ModelViewSet):
+	    queryset = Subject.objects.all()
+	    serializer_class = SubjectSerializer
+
+## Actions
+Es posible también, definir acciones especificas que nos permiten definir un comportamiendo adicional sobre un registro en particular o el conjunto de datos.
+
+	@action(detail=True, methods=['GET', 'POST'])
+	    def students(self, request, pk=None):
+	        subject = self.get_object()
+
+	        if request.method == 'GET':
+	            serialized = StudentSerializer(subject.students, many=True)
+	            return Response(status=status.HTTP_200_OK, data=serialized.data)
+
+	        if request.method == 'POST':
+	            students_ids = request.data.get('students')
+	            for id in students_ids:
+	                student = Student.objects.get(id=id)
+	                subject.students.add(student)
+	            subject.save()
+	            return Response(status=status.HTTP_200_OK)
+
+	    @action(detail=False)
+	    def order(self, request):
+	        subjects = Subject.objects.all().order_by('name')
+	        serialized = SubjectSerializer(subjects, many=True)
+	        return Response(status=status.HTTP_200_OK, data=serialized.data)
+
+## Filtros
+Podemos también, agregar lógica que nos permita filtrar información de nuestro endpoint con base en los campos de nuestro modelo.
+
+    def get_queryset(self):
+        parameters = {}
+        for param in self.request.query_params:
+            if param in ['page', 'page_size']:
+                continue
+            if param in ['teacher', 'id', 'students']:
+                parameters[param] = self.request.query_params[param]
+                continue
+            parameters[param + '__icontains'] = self.request.query_params[param]
+
+        subjects_filtered = Subject.objects.filter(**parameters)
+        return subjects_filtered
+
+El código anterior obtiene los parametros pasados a la vista y construye un objeto (parameters) que nos permite filtrar el queryset con dichos paremetros (subjects_filtered).
+
+## Permisos
+Es recomendable crear una clase independiente, en donde se gestione la lógica relacionada a los permisos de acceso a la vista o endpoint. Esta clase debe heredar de BasePermission y puede implementar cualquiera o ambos de los siguientes métodos.
+
+	class SubjectPermissions(BasePermission):
+
+	    def has_permission(self, request, view): # GET, POST, DELETE, PUT, actions
+	        if request.user.is_staff:
+	            return True
+	        if not request.user.is_staff and view.action in ['list', 'students', 'retrieve']:
+	            return True
+	        if not request.user.is_staff and request.method in ['POST', 'DELETE', 'UPDATE']:
+	            return False
+
+	    def has_object_permission(self, request, view, obj):
+	        if request.user.is_staff:
+	            return True
+
+	        if not request.user.is_staff and obj.owner == request.user:
+	            return True
+
+	        return False
+
+El método has_permission, es un primer nivel de autorización donde validamos a nivel verbo HTTP, acción o usuario si tiene privilegios.
+
+El método has_object_permission nos permite validar lo necesario a nivel registro, por ejemplo: validar si el usuario que hace la petición es dueño del registro.

@@ -1,12 +1,15 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from core.paginations import SmallResultsSetPagination
 from students.models import Student
 from students.serializers import StudentSerializer
 from subjects.models import Subject
+from subjects.permissions import SubjectPermissions
 from subjects.serializers import SubjectSerializer, SubjectDetailSerializer
 from teachers.models import Teacher
 from teachers.serializers import TeacherSerializer
@@ -15,10 +18,14 @@ from teachers.serializers import TeacherSerializer
 class SubjectViewSet(ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+    pagination_class = SmallResultsSetPagination
+    permission_classes = [SubjectPermissions, ]
 
     def get_queryset(self):
         parameters = {}
         for param in self.request.query_params:
+            if param in ['page', 'page_size']:
+                continue
             if param in ['teacher', 'id', 'students']:
                 parameters[param] = self.request.query_params[param]
                 continue
