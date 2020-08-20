@@ -11,7 +11,7 @@ class Subject(models.Model):
     description = models.CharField(max_length=200)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=True, related_name='subjects')
     students = models.ManyToManyField(Student, related_name='courses', through='SubjectStudent')
-    owner = models.ForeignKey(User, related_name='subjects', on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, related_name='subjects', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.name

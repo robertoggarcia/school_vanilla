@@ -16,6 +16,9 @@ from teachers.serializers import TeacherSerializer
 
 
 class SubjectViewSet(ModelViewSet):
+    """
+    Esta vista permite acceder y generar a los recursos de las materias.
+    """
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     pagination_class = SmallResultsSetPagination
