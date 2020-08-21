@@ -8,6 +8,7 @@ class Student(models.Model):
     grade = models.FloatField(default=0.0)
     active = models.BooleanField(default=True)
     user = models.OneToOneField(User, related_name='user', on_delete=models.CASCADE, null=True)
+    email = models.CharField(max_length=100, default='student@gmail.com')
 
     def __str__(self):
         return self.name

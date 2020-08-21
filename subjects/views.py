@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime
+
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
@@ -11,6 +13,7 @@ from students.serializers import StudentSerializer
 from subjects.models import Subject
 from subjects.permissions import SubjectPermissions
 from subjects.serializers import SubjectSerializer, SubjectDetailSerializer
+from subjects.tasks import send_email_to_students
 from teachers.models import Teacher
 from teachers.serializers import TeacherSerializer
 
@@ -22,7 +25,7 @@ class SubjectViewSet(ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     pagination_class = SmallResultsSetPagination
-    permission_classes = [SubjectPermissions, ]
+    permission_classes = [AllowAny, ]
 
     def get_queryset(self):
         parameters = {}
@@ -41,6 +44,14 @@ class SubjectViewSet(ModelViewSet):
         if self.action == 'retrieve':
             return SubjectDetailSerializer
         return SubjectSerializer
+
+    @action(detail=True, methods=['POST'])
+    def send_email(self, request, pk=None):
+        subject = self.get_object()
+        serialized = StudentSerializer(subject.students.all(), many=True)
+        date_to = datetime.now() + timedelta(minutes=2)
+        send_email_to_students.apply_async(args=[serialized.data], eta=date_to)
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['GET', 'POST', 'DELETE', 'PUT']) # subjects/pk/teacher/
     def teacher(self, request, pk=None):

@@ -232,3 +232,56 @@ Es recomendable crear una clase independiente, en donde se gestione la lógica r
 El método has_permission, es un primer nivel de autorización donde validamos a nivel verbo HTTP, acción o usuario si tiene privilegios.
 
 El método has_object_permission nos permite validar lo necesario a nivel registro, por ejemplo: validar si el usuario que hace la petición es dueño del registro.
+
+
+## Celery
+foo...
+
+1. Instalar la librería
+`pip install celery`
+
+2. Crear el archivo de configuración de celery
+```
+	import os
+	from celery import Celery
+	os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
+
+	app = Celery('proj')
+
+	app.config_from_object('django.conf:settings', namespace='CELERY')
+
+	app.autodiscover_tasks()
+```
+
+3. Importar la aplicación de Celery
+```
+	from .celery import app as celery_app
+
+	__all__ = ('celery_app',)
+```
+
+4. Configurar el broker (RabbitMQ/Redis)
+`CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'`
+
+5. Crear las tareas
+```
+	from school.celery import app
+	from core.utils import send_my_email
+
+
+	@app.task(name='send_email_to_students')
+	def send_email_to_students(students):
+	    for student in students:
+	        send_my_email(
+	            'Bienvenido a la clase',
+	            'Gracias por estar en la clase, espero que aprendas mucho',
+	            'rob@gmail.com',
+	            student.email
+	        )
+
+```
+
+
+6. Ejecutar el worker
+`celery -A proj worker -l info`
+
