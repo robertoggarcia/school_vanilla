@@ -235,7 +235,7 @@ El método has_object_permission nos permite validar lo necesario a nivel regist
 
 
 ## Celery
-foo...
+Es una herramienta que nos permite gestionar tareas de forma asincrona.
 
 1. Instalar la librería
 `pip install celery`
@@ -285,3 +285,5 @@ foo...
 6. Ejecutar el worker
 `celery -A proj worker -l info`
 
+7. Invocar una tarea:
+`send_email_to_students.apply_async(args=[serialized.data])`
